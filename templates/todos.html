@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tu tworzymy todo i widzimy listę</title>
+    <style>
+        table, th, tr, td {border: 1px solid black;}
+    </style>
+</head>
+
+<h2>Lista zadań</h2>
+
+<table>
+    <thead>
+    <th>Nr</th>
+    <th>Tytuł</th>
+    <th>Opis</th>
+    <th>Czy zrobione?</th>
+    </thead>
+
+    <tbody>
+    {% for todo in todos %}
+    <tr>
+        {% for details in todo %}
+        <td>{{ details }}</td>
+        {% endfor %}
+        {% set id, title, description, done = todo %}
+        <td><a href="/todos/{{ id }}">Update</a></td>
+        <td><a href="/todos/delete/{{ id }}">Delete</a></td>
+    </tr>
+ 
+    </tbody>
+    {% endfor %}
+</table>
+<div>
+    <h2> Dodaj nowe zadanie: </h2>
+    <form method="POST" action="/todos/">
+        {{ form.hidden_tag() }}
+        <table>
+            {% for field in form if field.widget.input_type != 'hidden' %}
+                <tr>
+                    <th>{{ field.label }} {% if field.flags.required %}*{% endif %}</th>
+                    <td>{{ field }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        <input type="submit" value="Go">
+    </form>
+</div>
+</body>
+</html>
