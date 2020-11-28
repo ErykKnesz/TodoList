@@ -36,11 +36,10 @@ def add_todo(conn, todo):
 
 class Todos:
     def __init__(self):
-        with open('todos.db', "r") as f:
-            conn = create_connection()
-            cursor = conn.cursor()
-            self.todos = cursor.execute(create_todos_sql)
-            conn.close()
+        conn = create_connection()
+        cursor = conn.cursor()
+        self.todos = cursor.execute(create_todos_sql)
+        conn.close()
 
     def all(self):
         conn = create_connection()
@@ -48,7 +47,7 @@ class Todos:
         cur.execute("SELECT * FROM todos")
         rows = cur.fetchall()
         return rows
-    
+
     def get(self, id):
         conn = create_connection()
         cur = conn.cursor()
@@ -59,19 +58,19 @@ class Todos:
     def create(self, data):
         data.pop('csrf_token')
         conn = create_connection()
-        if data['done'] == True:
+        if data['done'] is True:
             data['done'] = 'tak'
         else:
             data['done'] = 'nie'
         data = tuple((data for data in data.values()))
         add_todo(conn, data)
-    
+
     def update(self, id, data):
         data.pop('csrf_token')
-        if data['done'] == True:
+        if data['done'] is True:
             data['done'] = 'tak'
         else:
-            data['done'] = 'nie'  
+            data['done'] = 'nie'
         sql = f"""
             UPDATE todos
             SET title = '{data['title']}',
@@ -86,7 +85,7 @@ class Todos:
             print("OK")
         except sqlite3.OperationalError as e:
             print(e)
-    
+
     def delete(self, id):
         try:
             sql = f"DELETE FROM todos WHERE id = {id}"
