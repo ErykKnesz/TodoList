@@ -25,52 +25,52 @@ def create_connection():
     return conn
 
 
-def add_todo(conn, todo):
-    sql = '''INSERT INTO todos(title, description, done)
-             VALUES(?,?,?)'''
+def execute_sql(sql, todo=None):
+    conn = create_connection()
     cur = conn.cursor()
-    cur.execute(sql, todo)
+    if todo:
+        cur.execute(sql, todo)
+    else:
+        cur.execute(sql)
     conn.commit()
-    return cur.lastrowid
+    return cur
+
+
+def boolean_converter(data):
+    data.pop('csrf_token')
+    if data['done'] is True:
+        data['done'] = 'tak'
+    else:
+        data['done'] = 'nie'
+    data = tuple((data for data in data.values()))
+    return data
 
 
 class Todos:
     def __init__(self):
-        conn = create_connection()
-        cursor = conn.cursor()
-        self.todos = cursor.execute(create_todos_sql)
-        conn.close()
+        self.todos = execute_sql(create_todos_sql)
 
     def all(self):
-        conn = create_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM todos")
+        sql = "SELECT * FROM todos"
+        cur = execute_sql(sql)
         rows = cur.fetchall()
         return rows
 
     def get(self, id):
-        conn = create_connection()
-        cur = conn.cursor()
-        cur.execute(f"SELECT * FROM todos WHERE id = {id}")
+        sql = f"SELECT * FROM todos WHERE id = {id}"
+        cur = execute_sql(sql)
         row = cur.fetchone()
         return row
 
     def create(self, data):
-        data.pop('csrf_token')
-        conn = create_connection()
-        if data['done'] is True:
-            data['done'] = 'tak'
-        else:
-            data['done'] = 'nie'
-        data = tuple((data for data in data.values()))
-        add_todo(conn, data)
+        data = boolean_converter(data)
+        sql = '''INSERT INTO todos(title, description, done)
+             VALUES(?,?,?)'''
+        cur = execute_sql(sql, todo=data)
+        return cur.lastrowid
 
     def update(self, id, data):
-        data.pop('csrf_token')
-        if data['done'] is True:
-            data['done'] = 'tak'
-        else:
-            data['done'] = 'nie'
+        boolean_converter(data)
         sql = f"""
             UPDATE todos
             SET title = '{data['title']}',
@@ -78,10 +78,7 @@ class Todos:
                 done = '{data['done']}'
             WHERE id = {id}"""
         try:
-            conn = create_connection()
-            cur = conn.cursor()
-            cur.execute(sql)
-            conn.commit()
+            execute_sql(sql)
             print("OK")
         except sqlite3.OperationalError as e:
             print(e)
@@ -89,10 +86,7 @@ class Todos:
     def delete(self, id):
         try:
             sql = f"DELETE FROM todos WHERE id = {id}"
-            conn = create_connection()
-            cur = conn.cursor()
-            cur.execute(sql)
-            conn.commit()
+            execute_sql(sql)
             print("OK")
         except sqlite3.OperationalError as e:
             print(e)
